@@ -112,7 +112,7 @@ class OutlookSender:
         self, pm_email: str, project_name: str, team_summary: list[dict]
     ) -> bool:
         """
-        Send summary email to PM with teams needing response.
+        Send summary email to PM with requests grouped by deadline.
 
         Args:
             pm_email: PM's email address
@@ -127,17 +127,42 @@ class OutlookSender:
                 logger.warning(f"Invalid PM email address: {pm_email}")
                 return False
 
-            # Build team summary section
-            team_lines = []
+            # Aggregate requests by deadline and collect teams for each
+            request_map = {}
             for team_info in team_summary:
                 team_no = team_info["team_no"]
                 requests = team_info["requests"]
-                team_lines.append(f"【{team_no}】")
                 for req in requests:
-                    team_lines.append(f"  - 依頼ID: {req['id']} / {req['content']}")
-                team_lines.append("")
+                    req_id = req["id"]
+                    deadline = req["deadline"]
+                    if req_id not in request_map:
+                        request_map[req_id] = {
+                            "content": req["content"],
+                            "deadline": deadline,
+                            "teams": set(),
+                        }
+                    request_map[req_id]["teams"].add(team_no)
 
-            team_summary_str = "\n".join(team_lines)
+            # Sort by deadline
+            sorted_requests = sorted(
+                request_map.items(),
+                key=lambda x: x[1]["deadline"] if x[1]["deadline"] else "9999/12/31"
+            )
+
+            # Build request summary section
+            request_lines = []
+            for req_id, req_info in sorted_requests:
+                content = req_info["content"]
+                deadline = req_info["deadline"]
+                teams = sorted(req_info["teams"])
+
+                request_lines.append(
+                    f"依頼ID: #{req_id}  期限 {deadline}  {content}"
+                )
+                request_lines.append(f"  未回答チーム：{', '.join(teams)}")
+                request_lines.append("")
+
+            request_summary_str = "\n".join(request_lines)
 
             # Create mail item
             mail = self.outlook.CreateItem(0)  # 0 = olMailItem
@@ -148,7 +173,7 @@ class OutlookSender:
             # Set subject and body
             mail.Subject = PM_SUMMARY_SUBJECT.format(project_name=project_name)
             mail.Body = PM_SUMMARY_BODY_TEMPLATE.format(
-                project_name=project_name, team_summary=team_summary_str
+                project_name=project_name, request_summary=request_summary_str
             )
 
             # Send email

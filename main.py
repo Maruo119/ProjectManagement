@@ -23,16 +23,24 @@ def main():
         logger.info("Step 1: Extracting project information...")
         project_info = reader.get_project_info()
 
-        # Step 3: Get pending requests (status = "依頼中")
-        logger.info("Step 2: Extracting pending requests...")
-        pending_requests = reader.get_pending_requests()
-        if not pending_requests:
-            logger.warning("No pending requests found")
+        # Step 3: Get pending requests filtered by deadline timing
+        logger.info("Step 2: Extracting pending requests by deadline timing...")
+        timing_dict = reader.get_pending_requests_by_deadline_timing()
+
+        # Combine all filtered requests
+        filtered_requests = (
+            timing_dict["3days_before"] +
+            timing_dict["1day_before"] +
+            timing_dict["on_deadline"]
+        )
+
+        if not filtered_requests:
+            logger.warning("No requests matching reminder timing found")
             return
 
-        # Step 4: Get teams needing response
+        # Step 4: Get teams needing response (for filtered requests)
         logger.info("Step 3: Extracting teams needing response...")
-        teams_needing_response = reader.get_teams_needing_response(pending_requests)
+        teams_needing_response = reader.get_teams_needing_response(filtered_requests)
         if not teams_needing_response:
             logger.warning("No teams need response")
             return

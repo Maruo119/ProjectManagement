@@ -22,7 +22,8 @@ from config import (
     TEAM_CONTACT_END_COL,
     TARGET_STATUS,
 )
-from utils import setup_logger, clean_value
+from utils import setup_logger, clean_value, get_reminder_timing
+from datetime import datetime
 
 logger = setup_logger(__name__)
 
@@ -71,6 +72,67 @@ class ExcelReader:
             return requests
         except Exception as e:
             logger.error(f"Error extracting pending requests: {e}")
+            raise
+
+    def get_pending_requests_by_deadline_timing(self) -> dict:
+        """
+        Extract pending requests filtered by deadline timing.
+
+        Returns:
+            dict with keys '3days_before', '1day_before', 'on_deadline'
+            each containing list of request dicts with 'id', 'content', 'deadline'
+        """
+        all_requests = self.get_pending_requests()
+        timing_dict = {
+            "3days_before": [],
+            "1day_before": [],
+            "on_deadline": [],
+        }
+
+        today = datetime.now()
+
+        try:
+            for req in all_requests:
+                deadline_str = req["deadline"]
+                if not deadline_str:
+                    continue
+
+                deadline_date = None
+                # Try to parse as datetime object (if already parsed by openpyxl)
+                if isinstance(deadline_str, datetime):
+                    deadline_date = deadline_str
+                else:
+                    # Try various string formats
+                    formats = [
+                        "%Y-%m-%d %H:%M:%S",
+                        "%Y/%m/%d %H:%M:%S",
+                        "%Y-%m-%d",
+                        "%Y/%m/%d",
+                    ]
+                    for fmt in formats:
+                        try:
+                            deadline_date = datetime.strptime(deadline_str, fmt)
+                            break
+                        except (ValueError, TypeError):
+                            continue
+
+                    if not deadline_date:
+                        logger.warning(
+                            f"Could not parse deadline for request {req['id']}: {deadline_str}"
+                        )
+                        continue
+
+                if deadline_date:
+                    timing = get_reminder_timing(deadline_date, today)
+                    if timing:
+                        timing_dict[timing].append(req)
+                        logger.info(
+                            f"Request {req['id']} matched timing: {timing}"
+                        )
+
+            return timing_dict
+        except Exception as e:
+            logger.error(f"Error filtering requests by deadline timing: {e}")
             raise
 
     def get_teams_needing_response(self, requests: list[dict]) -> list[dict]:

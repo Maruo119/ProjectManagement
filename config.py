@@ -48,8 +48,8 @@ PM_SUMMARY_BODY_TEMPLATE = """お疲れ様です。
 {project_name}の回答状況をお知らせします。
 
 
-【未回答チーム一覧】
-{team_summary}
+【未回答情報】
+{request_summary}
 
 ご不明な点やご質問がございましたら、お気軽にお問い合わせください。
 
