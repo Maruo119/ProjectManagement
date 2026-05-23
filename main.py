@@ -41,7 +41,7 @@ def main():
         logger.info("Step 4: Initializing Outlook connection...")
         sender = OutlookSender()
 
-        # Step 6: Send reminder emails (one per team)
+        # Step 6: Send reminder emails (one per request)
         logger.info("Step 5: Sending reminder emails...")
         sent_count = 0
         for team_info in teams_needing_response:
@@ -51,14 +51,14 @@ def main():
             contacts = reader.get_team_contacts(team_no)
 
             if contacts:
-                if sender.send_reminder(
+                emails_sent = sender.send_reminder(
                     team_no,
                     contacts,
                     project_info["project_name"],
                     project_info["cc_email"],
                     requests,
-                ):
-                    sent_count += 1
+                )
+                sent_count += emails_sent
             else:
                 logger.warning(f"No contacts found for team {team_no}")
 

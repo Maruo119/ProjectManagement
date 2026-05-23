@@ -1,8 +1,6 @@
 """Outlook email sending module."""
 from win32com.client import Dispatch
 from config import (
-    REMINDER_MAIL_SUBJECT,
-    REMINDER_MAIL_BODY_TEMPLATE,
     PM_SUMMARY_SUBJECT,
     PM_SUMMARY_BODY_TEMPLATE,
 )
@@ -30,9 +28,9 @@ class OutlookSender:
         project_name: str,
         cc_email: str,
         requests: list[dict],
-    ) -> bool:
+    ) -> int:
         """
-        Send reminder email to team.
+        Send reminder emails to team (one email per request).
 
         Args:
             team_no: Team number
@@ -42,7 +40,7 @@ class OutlookSender:
             requests: List of request dicts with 'id', 'content', 'deadline'
 
         Returns:
-            bool: True if email sent successfully, False otherwise
+            int: Number of emails sent successfully
         """
         try:
             # Validate recipients
@@ -52,55 +50,63 @@ class OutlookSender:
 
             if not valid_recipients:
                 logger.warning(f"No valid email addresses found for team {team_no}")
-                return False
+                return 0
 
-            # Build body content with all requests
-            body_content = REMINDER_MAIL_BODY_TEMPLATE.format(
-                project_name=project_name, request_id="", content="", deadline=""
-            )
-
-            # Create mail item
-            mail = self.outlook.CreateItem(0)  # 0 = olMailItem
-
-            # Set recipients
             recipients_str = ";".join(valid_recipients)
-            mail.To = recipients_str
-            if cc_email and is_valid_email(cc_email):
-                mail.Cc = cc_email
+            sent_count = 0
 
-            # Set subject
-            mail.Subject = REMINDER_MAIL_SUBJECT
-
-            # Build body with request details
-            body_lines = [f"お疲れ様です。"]
-            body_lines.append(f"{project_name}について、以下の依頼についてまだご回答をいただいていません。")
-            body_lines.append("お手数ですが、お早めにご対応いただきますようお願いいたします。")
-            body_lines.append("")
-
+            # Send one email per request
             for req in requests:
-                body_lines.append(f"依頼ID：{req['id']}")
-                body_lines.append(f"依頼内容：{req['content']}")
-                body_lines.append(f"期限：{req['deadline']}")
-                body_lines.append("")
+                try:
+                    # Create mail item
+                    mail = self.outlook.CreateItem(0)  # 0 = olMailItem
 
-            body_lines.append("詳細は以下のExcelファイルをご参照ください。")
-            body_lines.append("D:\\ProjectManagement\\PJ依頼事項管理表.xlsx")
-            body_lines.append("")
-            body_lines.append("よろしくお願いいたします。")
+                    # Set recipients
+                    mail.To = recipients_str
+                    if cc_email and is_valid_email(cc_email):
+                        mail.Cc = cc_email
 
-            mail.Body = "\n".join(body_lines)
+                    # Set subject with project name and request id
+                    mail.Subject = f"{project_name}　依頼#{req['id']}　リマインド"
 
-            # Send email
-            mail.Send()
+                    # Build body with request details
+                    body_lines = [f"お疲れ様です。"]
+                    body_lines.append(f"{project_name}について、以下の依頼についてまだご回答をいただいていません。")
+                    body_lines.append("お手数ですが、お早めにご対応いただきますようお願いいたします。")
+                    body_lines.append("")
+                    body_lines.append(f"依頼ID：{req['id']}")
+                    body_lines.append(f"依頼内容：{req['content']}")
+                    body_lines.append(f"期限：{req['deadline']}")
+                    body_lines.append("")
+                    body_lines.append("詳細は以下のExcelファイルをご参照ください。")
+                    body_lines.append("D:\\ProjectManagement\\PJ依頼事項管理表.xlsx")
+                    body_lines.append("")
+                    body_lines.append("よろしくお願いいたします。")
 
-            logger.info(
-                f"Successfully sent reminder email for team {team_no} to: {recipients_str}"
-            )
-            return True
+                    mail.Body = "\n".join(body_lines)
+
+                    # Send email
+                    mail.Send()
+                    sent_count += 1
+
+                    logger.info(
+                        f"Sent reminder email for team {team_no}, request {req['id']}"
+                    )
+
+                except Exception as e:
+                    logger.error(
+                        f"Failed to send email for team {team_no}, request {req['id']}: {e}"
+                    )
+
+            if sent_count > 0:
+                logger.info(
+                    f"Successfully sent {sent_count} reminder email(s) for team {team_no} to: {recipients_str}"
+                )
+            return sent_count
 
         except Exception as e:
-            logger.error(f"Failed to send email for team {team_no}: {e}")
-            return False
+            logger.error(f"Failed to process reminder emails for team {team_no}: {e}")
+            return 0
 
     def send_pm_summary(
         self, pm_email: str, project_name: str, team_summary: list[dict]

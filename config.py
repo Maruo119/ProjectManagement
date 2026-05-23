@@ -40,23 +40,6 @@ TEAM_CONTACT_START_COL = 3  # C列（管理者_1）
 TEAM_CONTACT_END_COL = 7  # G列（管理者_5）
 
 # Email settings
-REMINDER_MAIL_SUBJECT = "【リマインド】回答依頼について"
-REMINDER_MAIL_BODY_TEMPLATE = """お疲れ様です。
-{project_name}について、以下の依頼についてまだご回答をいただいていません。
-お手数ですが、お早めにご対応いただきますようお願いいたします。
-
-
-依頼ID：{request_id}
-依頼内容：{content}
-期限：{deadline}
-
-
-詳細は以下のExcelファイルをご参照ください。
-D:\\ProjectManagement\\PJ依頼事項管理表.xlsx
-
-
-よろしくお願いいたします。
-"""
 
 # PM Summary Email
 PM_SUMMARY_SUBJECT = "【回答状況サマリー】{project_name}"
