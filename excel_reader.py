@@ -7,10 +7,6 @@ from config import (
     SHEET_SUMMARY,
     SHEET_RESPONSE,
     SHEET_TEAM,
-    PROJECT_DATA_ROW,
-    PROJECT_NAME_COL,
-    PROJECT_PM_EMAIL_COL,
-    PROJECT_CC_EMAIL_COL,
     SUMMARY_HEADER_ROW,
     SUMMARY_REQUEST_ID_COL,
     SUMMARY_CONTENT_COL,
@@ -151,14 +147,21 @@ class ExcelReader:
     def get_project_info(self) -> dict:
         """Extract project information from PJ情報 sheet."""
         try:
+            from config import (
+                PROJECT_NAME_ROW,
+                PROJECT_PM_EMAIL_ROW,
+                PROJECT_CC_EMAIL_ROW,
+                PROJECT_VALUE_COL,
+            )
+
             project_name = clean_value(
-                self.sheet_project.cell(PROJECT_DATA_ROW, PROJECT_NAME_COL).value
+                self.sheet_project.cell(PROJECT_NAME_ROW, PROJECT_VALUE_COL).value
             )
             pm_email = clean_value(
-                self.sheet_project.cell(PROJECT_DATA_ROW, PROJECT_PM_EMAIL_COL).value
+                self.sheet_project.cell(PROJECT_PM_EMAIL_ROW, PROJECT_VALUE_COL).value
             )
             cc_email = clean_value(
-                self.sheet_project.cell(PROJECT_DATA_ROW, PROJECT_CC_EMAIL_COL).value
+                self.sheet_project.cell(PROJECT_CC_EMAIL_ROW, PROJECT_VALUE_COL).value
             )
 
             result = {

@@ -7,17 +7,17 @@ PROJECT_DIR = Path(__file__).parent
 EXCEL_FILE = PROJECT_DIR / "PJ依頼事項管理表.xlsx"
 
 # Sheet names (Japanese)
-SHEET_PROJECT = 0  # PJ情報
-SHEET_SUMMARY = 1  # 台帳
-SHEET_RESPONSE = 2  # 回答一覧
-SHEET_TEAM = 3  # team定義
+SHEET_SUMMARY = 0  # 台帳
+SHEET_RESPONSE = 1  # 回答一覧
+SHEET_TEAM = 2  # team定義
+SHEET_PROJECT = 3  # PJ情報
 
 # Column indices (1-based in Excel, but using 0-based for openpyxl)
-# PJ情報 (Sheet 0)
-PROJECT_DATA_ROW = 2  # Data row (assuming row 2 contains project info)
-PROJECT_NAME_COL = 1  # A列
-PROJECT_PM_EMAIL_COL = 2  # B列
-PROJECT_CC_EMAIL_COL = 3  # C列
+# PJ情報 (Sheet 3)
+PROJECT_NAME_ROW = 2  # Project名 in row 2
+PROJECT_PM_EMAIL_ROW = 3  # PM_メールアドレス in row 3
+PROJECT_CC_EMAIL_ROW = 4  # CC用メールアドレス in row 4
+PROJECT_VALUE_COL = 3  # C列（値）
 
 # 台帳 (Sheet 1)
 SUMMARY_HEADER_ROW = 3
